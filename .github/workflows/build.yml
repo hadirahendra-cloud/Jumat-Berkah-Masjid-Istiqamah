@@ -6,7 +6,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'JumatBerkahAndroid/**'
+      - 'Jumat-Berkah-Android-Source-v3-WhatsApp-Fix.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -31,18 +31,37 @@ jobs:
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
+      - name: Extract Android source ZIP
+        run: |
+          SOURCE_ZIP="Jumat-Berkah-Android-Source-v3-WhatsApp-Fix.zip"
+
+          if [ ! -f "$SOURCE_ZIP" ]; then
+            echo "ERROR: Source ZIP tidak ditemukan: $SOURCE_ZIP"
+            echo "File ZIP yang tersedia:"
+            ls -lah *.zip || true
+            exit 1
+          fi
+
+          unzip -q "$SOURCE_ZIP" -d extracted
+
+          if [ ! -f "extracted/JumatBerkahAndroid/settings.gradle" ]; then
+            echo "ERROR: settings.gradle tidak ditemukan."
+            find extracted -maxdepth 4 -type f
+            exit 1
+          fi
+
       - name: Set up Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
       - name: Build Debug APK
-        working-directory: JumatBerkahAndroid
+        working-directory: extracted/JumatBerkahAndroid
         run: gradle --no-daemon assembleDebug
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: Jumat-Berkah-Debug-APK
-          path: JumatBerkahAndroid/app/build/outputs/apk/debug/app-debug.apk
+          path: extracted/JumatBerkahAndroid/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
