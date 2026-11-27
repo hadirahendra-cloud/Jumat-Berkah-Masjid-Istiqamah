@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - 'Jumat-Berkah-Android-Source-v8-Nama-Pemilik-Donatur.zip'
+      - 'Jumat-Berkah-Android-Source-v9-Tanggal-Ucapan-Terima-Kasih.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
 
       - name: Extract Android source ZIP
         run: |
-          SOURCE_ZIP="Jumat-Berkah-Android-Source-v8-Nama-Pemilik-Donatur.zip"
+          SOURCE_ZIP="Jumat-Berkah-Android-Source-v9-Tanggal-Ucapan-Terima-Kasih.zip"
 
           if [ ! -f "$SOURCE_ZIP" ]; then
             echo "ERROR: Source ZIP tidak ditemukan!"
@@ -81,7 +81,7 @@ jobs:
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jumat-Berkah-v8-Nama-Pemilik-Donatur
+          name: Jumat-Berkah-v9-Tanggal-Ucapan-Terima-Kasih
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
