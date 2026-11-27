@@ -6,7 +6,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'Jumat-Berkah-Android-Source-v4-Stempel-DKM.zip'
+      - 'Jumat-Berkah-Android-Source-v5-WhatsApp-Stempel-Fix.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -33,10 +33,11 @@ jobs:
 
       - name: Extract Android source ZIP
         run: |
-          SOURCE_ZIP="Jumat-Berkah-Android-Source-v4-Stempel-DKM.zip"
+          SOURCE_ZIP="Jumat-Berkah-Android-Source-v5-WhatsApp-Stempel-Fix.zip"
 
           if [ ! -f "$SOURCE_ZIP" ]; then
             echo "ERROR: Source ZIP tidak ditemukan: $SOURCE_ZIP"
+            echo "File ZIP yang tersedia:"
             ls -lah *.zip || true
             exit 1
           fi
@@ -61,6 +62,6 @@ jobs:
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jumat-Berkah-v4-Stempel-DKM-APK
+          name: Jumat-Berkah-v5-WhatsApp-Stempel-Fix
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
