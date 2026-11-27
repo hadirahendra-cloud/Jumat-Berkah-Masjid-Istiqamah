@@ -1,5 +1,5 @@
 
-name: Build Jumat Berkah APK Release
+name: Build Jumat Berkah APK
 
 on:
   workflow_dispatch:
@@ -48,6 +48,7 @@ jobs:
 
           if [ ! -f "$PROJECT_DIR/settings.gradle" ]; then
             echo "ERROR: settings.gradle tidak ditemukan!"
+            find extracted -maxdepth 4 -type f
             exit 1
           fi
 
@@ -71,12 +72,14 @@ jobs:
             exit 1
           fi
 
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/release-key.jks
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/release-key.jks
 
           if [ ! -s app/release-key.jks ]; then
             echo "ERROR: Keystore gagal dipulihkan!"
             exit 1
           fi
+
+          echo "Keystore berhasil dipulihkan."
 
       - name: Build signed Release APK
         working-directory: extracted/JumatBerkahAndroid
@@ -85,40 +88,33 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          if [ -z "$ANDROID_KEYSTORE_PASSWORD" ]; then
-            echo "ERROR: Password keystore belum diisi!"
-            exit 1
-          fi
-
-          if [ -z "$ANDROID_KEY_ALIAS" ]; then
-            echo "ERROR: Key alias belum diisi!"
-            exit 1
-          fi
-
-          if [ -z "$ANDROID_KEY_PASSWORD" ]; then
-            echo "ERROR: Password key belum diisi!"
-            exit 1
-          fi
-
           gradle --no-daemon assembleRelease
 
       - name: Verify signed APK
         working-directory: extracted/JumatBerkahAndroid
         run: |
           APK="app/build/outputs/apk/release/app-release.apk"
+          APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
 
           if [ ! -f "$APK" ]; then
             echo "ERROR: APK Release tidak ditemukan!"
             exit 1
           fi
 
-          apksigner verify --verbose "$APK"
+          if [ ! -f "$APKSIGNER" ]; then
+            echo "ERROR: apksigner tidak ditemukan!"
+            exit 1
+          fi
+
+          "$APKSIGNER" verify --verbose "$APK"
+
+          echo "APK berhasil diverifikasi."
           ls -lh "$APK"
 
       - name: Upload signed Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jumat-Berkah-Release-APK
+          name: Jumat-Berkah-v10-Release-Signed
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
