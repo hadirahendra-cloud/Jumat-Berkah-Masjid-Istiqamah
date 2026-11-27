@@ -1,5 +1,5 @@
 
-name: Build Jumat Berkah APK
+name: Build Musaji'Den APK
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - 'Jumat-Berkah-Android-Source-v10-Kartu-Ucapan-Bergambar.zip'
+      - 'MusajiDen-Android-Source-v11-Nama-Aplikasi.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
 
       - name: Extract Android source ZIP
         run: |
-          SOURCE_ZIP="Jumat-Berkah-Android-Source-v10-Kartu-Ucapan-Bergambar.zip"
+          SOURCE_ZIP="MusajiDen-Android-Source-v11-Nama-Aplikasi.zip"
 
           if [ ! -f "$SOURCE_ZIP" ]; then
             echo "ERROR: Source ZIP tidak ditemukan!"
@@ -48,7 +48,6 @@ jobs:
 
           if [ ! -f "$PROJECT_DIR/settings.gradle" ]; then
             echo "ERROR: settings.gradle tidak ditemukan!"
-            find extracted -maxdepth 4 -type f
             exit 1
           fi
 
@@ -114,7 +113,7 @@ jobs:
       - name: Upload signed Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jumat-Berkah-v10-Release-Signed
+          name: MusajiDen-v11-Release-Signed
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
