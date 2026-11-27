@@ -4,9 +4,10 @@ name: Build Jumat Berkah APK
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
     paths:
-      - 'Jumat-Berkah-Android-Source-v6-Canvas-Security-Fix.zip'
+      - 'Jumat-Berkah-Android-Source-v7-Ucapan-Terima-Kasih-Donatur.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -33,20 +34,26 @@ jobs:
 
       - name: Extract Android source ZIP
         run: |
-          SOURCE_ZIP="Jumat-Berkah-Android-Source-v6-Canvas-Security-Fix.zip"
+          SOURCE_ZIP="Jumat-Berkah-Android-Source-v7-Ucapan-Terima-Kasih-Donatur.zip"
 
           if [ ! -f "$SOURCE_ZIP" ]; then
-            echo "ERROR: Source ZIP tidak ditemukan: $SOURCE_ZIP"
-            echo "File ZIP yang tersedia:"
-            ls -lah *.zip || true
+            echo "ERROR: Source ZIP tidak ditemukan!"
+            ls -lah
             exit 1
           fi
 
           unzip -q "$SOURCE_ZIP" -d extracted
 
-          if [ ! -f "extracted/JumatBerkahAndroid/settings.gradle" ]; then
-            echo "ERROR: settings.gradle tidak ditemukan."
+          PROJECT_DIR="extracted/JumatBerkahAndroid"
+
+          if [ ! -f "$PROJECT_DIR/settings.gradle" ]; then
+            echo "ERROR: settings.gradle tidak ditemukan!"
             find extracted -maxdepth 4 -type f
+            exit 1
+          fi
+
+          if [ ! -f "$PROJECT_DIR/app/build.gradle" ]; then
+            echo "ERROR: app/build.gradle tidak ditemukan!"
             exit 1
           fi
 
@@ -57,11 +64,24 @@ jobs:
 
       - name: Build Debug APK
         working-directory: extracted/JumatBerkahAndroid
-        run: gradle --no-daemon assembleDebug
+        run: |
+          gradle --no-daemon assembleDebug
+
+      - name: Verify APK
+        run: |
+          APK="extracted/JumatBerkahAndroid/app/build/outputs/apk/debug/app-debug.apk"
+
+          if [ ! -f "$APK" ]; then
+            echo "ERROR: APK tidak ditemukan!"
+            exit 1
+          fi
+
+          ls -lh "$APK"
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: Jumat-Berkah-v6-Canvas-Security-Fix
+          name: Jumat-Berkah-v7-Ucapan-Terima-Kasih-Donatur
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          retention-days: 30
