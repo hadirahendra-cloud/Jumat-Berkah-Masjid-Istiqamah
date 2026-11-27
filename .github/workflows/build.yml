@@ -6,9 +6,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'app/**'
-      - '*.gradle'
-      - 'gradle.properties'
+      - 'JumatBerkahAndroid/**'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -39,11 +37,12 @@ jobs:
           gradle-version: '8.7'
 
       - name: Build Debug APK
+        working-directory: JumatBerkahAndroid
         run: gradle --no-daemon assembleDebug
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: Jumat-Berkah-Debug-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: JumatBerkahAndroid/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
