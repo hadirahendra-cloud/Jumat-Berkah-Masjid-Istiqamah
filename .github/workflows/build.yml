@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - 'MusajiDen-Android-Source-v11-Nama-Aplikasi.zip'
+      - '**.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
 
       - name: Extract Android source ZIP
         run: |
-          SOURCE_ZIP="MusajiDen-Android-Source-v11-Nama-Aplikasi.zip"
+          SOURCE_ZIP="Jumat-Berkah-Android-Source-v10-Kartu-Ucapan-Bergambar.zip"
 
           if [ ! -f "$SOURCE_ZIP" ]; then
             echo "ERROR: Source ZIP tidak ditemukan!"
@@ -48,6 +48,7 @@ jobs:
 
           if [ ! -f "$PROJECT_DIR/settings.gradle" ]; then
             echo "ERROR: settings.gradle tidak ditemukan!"
+            find extracted -maxdepth 4 -type f
             exit 1
           fi
 
@@ -71,7 +72,9 @@ jobs:
             exit 1
           fi
 
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/release-key.jks
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" \
+            | tr -d '[:space:]' \
+            | base64 --decode > app/release-key.jks
 
           if [ ! -s app/release-key.jks ]; then
             echo "ERROR: Keystore gagal dipulihkan!"
@@ -100,20 +103,18 @@ jobs:
             exit 1
           fi
 
-          if [ ! -f "$APKSIGNER" ]; then
+          if [ ! -x "$APKSIGNER" ]; then
             echo "ERROR: apksigner tidak ditemukan!"
             exit 1
           fi
 
           "$APKSIGNER" verify --verbose "$APK"
-
-          echo "APK berhasil diverifikasi."
           ls -lh "$APK"
 
       - name: Upload signed Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusajiDen-v11-Release-Signed
+          name: MusajiDen-Release-APK
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
