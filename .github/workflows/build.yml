@@ -1,5 +1,5 @@
 
-name: Build Musaji'Den v21 APK
+name: Build Musaji'Den v21 FIX Tombol
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - 'MusajiDen-Android-Source-v21-Catat-Keuangan-Sama-dengan-Jumat-Berkah.zip'
+      - 'MusajiDen-Android-Source-v21-FIX-Tombol.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -32,10 +32,12 @@ jobs:
       - name: Locate Android SDK Manager
         run: |
           SDKMANAGER="$(find "$ANDROID_HOME" -type f -name sdkmanager -print -quit)"
+
           if [ -z "$SDKMANAGER" ]; then
             echo "sdkmanager tidak ditemukan"
             exit 1
           fi
+
           echo "SDKMANAGER=$SDKMANAGER" >> "$GITHUB_ENV"
           echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
 
@@ -52,33 +54,40 @@ jobs:
             "platforms;android-35" \
             "build-tools;35.0.0"
 
-      - name: Extract Musaji'Den v21 source
+      - name: Extract Source v21 FIX Tombol
         run: |
-          ZIP_FILE="MusajiDen-Android-Source-v21-Catat-Keuangan-Sama-dengan-Jumat-Berkah.zip"
+          ZIP_FILE="MusajiDen-Android-Source-v21-FIX-Tombol.zip"
 
-          test -f "$ZIP_FILE" || {
-            echo "File source ZIP tidak ditemukan: $ZIP_FILE"
+          if [ ! -f "$ZIP_FILE" ]; then
+            echo "Source ZIP tidak ditemukan: $ZIP_FILE"
             exit 1
-          }
+          fi
 
           mkdir -p extracted
           unzip -o "$ZIP_FILE" -d extracted
 
-          test -f extracted/JumatBerkahAndroid/settings.gradle
-          test -f extracted/JumatBerkahAndroid/app/build.gradle
-          test -f extracted/JumatBerkahAndroid/app/src/main/assets/index.html
+          PROJECT="extracted/JumatBerkahAndroid"
+
+          test -f "$PROJECT/settings.gradle"
+          test -f "$PROJECT/build.gradle"
+          test -f "$PROJECT/app/build.gradle"
+          test -f "$PROJECT/app/src/main/assets/index.html"
+          test -f "$PROJECT/app/src/main/java/com/masjidistiqamah/jumatberkah/MainActivity.java"
+
+          echo "PROJECT_DIR=$PROJECT" >> "$GITHUB_ENV"
 
       - name: Restore private release signing key
         working-directory: extracted/JumatBerkahAndroid
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          test -n "$ANDROID_KEYSTORE_BASE64" || {
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
             echo "Secret ANDROID_KEYSTORE_BASE64 belum tersedia"
             exit 1
-          }
+          fi
 
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/release-key.jks
+
           test -s app/release-key.jks
 
       - name: Build signed release APK
@@ -104,6 +113,6 @@ jobs:
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusajiDen-v21-Release-APK
+          name: MusajiDen-v21-FIX-Tombol-Release-APK
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
