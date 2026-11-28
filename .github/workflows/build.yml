@@ -37,24 +37,23 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Locate Android project
+      - name: Extract Musaji'Den v13 source
         run: |
-          PROJECT_FILE=$(find . -type f -path '*/app/build.gradle' \
-            -not -path '*/build/*' | head -n 1)
+          ZIP_FILE="MusajiDen-Android-Source-v13-Pusat-Masjid.zip"
 
-          if [ -z "$PROJECT_FILE" ]; then
-            echo "ERROR: app/build.gradle tidak ditemukan"
-            find . -maxdepth 5 -type f | head -n 100
+          test -f "$ZIP_FILE" || {
+            echo "ERROR: Source ZIP v13 tidak ditemukan"
             exit 1
-          fi
+          }
 
-          PROJECT_DIR=$(dirname "$(dirname "$PROJECT_FILE")")
-          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          mkdir -p extracted
+          unzip -q "$ZIP_FILE" -d extracted
 
-          echo "Project ditemukan: $PROJECT_DIR"
+          test -f extracted/JumatBerkahAndroid/app/build.gradle
+          test -f extracted/JumatBerkahAndroid/app/src/main/assets/index.html
 
-          test -f "$PROJECT_DIR/app/src/main/AndroidManifest.xml"
-          test -f "$PROJECT_DIR/app/src/main/assets/index.html"
+          echo "PROJECT_DIR=extracted/JumatBerkahAndroid" >> $GITHUB_ENV
+          echo "Source v13 berhasil diekstrak"
 
       - name: Restore private release signing key
         env:
@@ -97,6 +96,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MusajiDen-v13-Release-APK
-          path: '**/app/build/outputs/apk/release/app-release.apk'
+          path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
