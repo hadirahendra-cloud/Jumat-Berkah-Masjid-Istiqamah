@@ -1,5 +1,5 @@
 
-name: Build Musaji'Den v22 Format Nominal Layout Tombol
+name: Build Musaji'Den v23 Hapus Alamat HP di Catat
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - 'MusajiDen-Android-Source-v22-Format-Nominal-Layout-Tombol.zip'
+      - 'MusajiDen-Android-Source-v23-Hapus-Alamat-HP-di-Catat.zip'
       - '.github/workflows/build.yml'
 
 permissions:
@@ -22,13 +22,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Temurin Java 17
+      - name: Setup Java Temurin 17
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle 8.7
+      - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
@@ -68,15 +68,15 @@ jobs:
           test -d "$ANDROID_HOME/platforms/android-35"
           test -x "$ANDROID_HOME/build-tools/35.0.0/apksigner"
 
-      - name: Extract Source Musaji'Den v22
+      - name: Extract Source Musaji'Den v23
         shell: bash
         run: |
           set -euo pipefail
 
-          ZIP_FILE="MusajiDen-Android-Source-v22-Format-Nominal-Layout-Tombol.zip"
+          ZIP_FILE="MusajiDen-Android-Source-v23-Hapus-Alamat-HP-di-Catat.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
-            echo "::error::Source ZIP v22 tidak ditemukan."
+            echo "::error::Source ZIP v23 tidak ditemukan."
             exit 1
           fi
 
@@ -93,7 +93,7 @@ jobs:
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
-      - name: Restore existing release keystore
+      - name: Restore Existing Release Keystore
         shell: bash
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -110,7 +110,7 @@ jobs:
 
           test -s "$PROJECT_DIR/app/release-key.jks"
 
-      - name: Build signed release APK
+      - name: Build Signed Release APK
         shell: bash
         working-directory: extracted/JumatBerkahAndroid
         env:
@@ -121,7 +121,7 @@ jobs:
           set -euo pipefail
           gradle --no-daemon assembleRelease
 
-      - name: Verify APK signature
+      - name: Verify APK Signature
         shell: bash
         working-directory: extracted/JumatBerkahAndroid
         run: |
@@ -133,10 +133,10 @@ jobs:
           test -s "$APK"
           "$APKSIGNER" verify --verbose "$APK"
 
-      - name: Upload signed APK
+      - name: Upload Signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusajiDen-v22-Format-Nominal-Layout-Tombol
+          name: MusajiDen-v23-Hapus-Alamat-HP-di-Catat
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
