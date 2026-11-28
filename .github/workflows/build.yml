@@ -37,23 +37,32 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Extract Musaji'Den v13 source
+      - name: Extract Musaji'Den v13 Home Fix
         run: |
           ZIP_FILE="MusajiDen-Android-Source-v13-Pusat-Masjid.zip"
 
-          test -f "$ZIP_FILE" || {
-            echo "ERROR: Source ZIP v13 tidak ditemukan"
+          if [ ! -f "$ZIP_FILE" ]; then
+            echo "ERROR: ZIP source v13 tidak ditemukan"
+            ls -la
             exit 1
-          }
+          fi
 
           mkdir -p extracted
           unzip -q "$ZIP_FILE" -d extracted
 
-          test -f extracted/JumatBerkahAndroid/app/build.gradle
-          test -f extracted/JumatBerkahAndroid/app/src/main/assets/index.html
+          PROJECT_DIR="extracted/JumatBerkahAndroid"
 
-          echo "PROJECT_DIR=extracted/JumatBerkahAndroid" >> $GITHUB_ENV
-          echo "Source v13 berhasil diekstrak"
+          if [ ! -f "$PROJECT_DIR/app/build.gradle" ]; then
+            echo "ERROR: app/build.gradle tidak ditemukan"
+            find extracted -maxdepth 5 -type f | head -n 100
+            exit 1
+          fi
+
+          test -f "$PROJECT_DIR/app/src/main/AndroidManifest.xml"
+          test -f "$PROJECT_DIR/app/src/main/assets/index.html"
+
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          echo "Source v13 Home Fix berhasil diekstrak"
 
       - name: Restore private release signing key
         env:
@@ -65,7 +74,8 @@ jobs:
             | base64 --decode > "$PROJECT_DIR/app/release-key.jks"
 
           test -s "$PROJECT_DIR/app/release-key.jks"
-          echo "Release keystore OK"
+
+          echo "Release keystore berhasil disiapkan"
 
       - name: Build signed release APK
         env:
