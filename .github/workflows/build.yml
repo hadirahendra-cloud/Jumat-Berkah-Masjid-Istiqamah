@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - 'MusajiDen-Android-Source-v13-Navigasi-Fix.zip'
+      - 'Jumat-Berkah-Android-Source-v10-Kartu-Ucapan-Bergambar.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
 
       - name: Extract Android source ZIP
         run: |
-          SOURCE_ZIP="MusajiDen-Android-Source-v13-Navigasi-Fix.zip"
+          SOURCE_ZIP="Jumat-Berkah-Android-Source-v10-Kartu-Ucapan-Bergambar.zip"
 
           if [ ! -f "$SOURCE_ZIP" ]; then
             echo "ERROR: Source ZIP tidak ditemukan!"
@@ -57,8 +57,6 @@ jobs:
             exit 1
           fi
 
-          echo "Source v13 berhasil diperiksa."
-
       - name: Set up Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -68,15 +66,16 @@ jobs:
         working-directory: extracted/JumatBerkahAndroid
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "ERROR: Secret ANDROID_KEYSTORE_BASE64 belum diisi!"
+            echo "ERROR: Secret ANDROID_KEYSTORE_BASE64 kosong!"
             exit 1
           fi
 
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" \
-            | tr -d '[:space:]' \
-            | base64 --decode > app/release-key.jks
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/release-key.jks
 
           if [ ! -s app/release-key.jks ]; then
             echo "ERROR: Keystore gagal dipulihkan!"
@@ -98,15 +97,10 @@ jobs:
         working-directory: extracted/JumatBerkahAndroid
         run: |
           APK="app/build/outputs/apk/release/app-release.apk"
-          APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          APKSIGNER="$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner"
 
           if [ ! -f "$APK" ]; then
             echo "ERROR: APK Release tidak ditemukan!"
-            exit 1
-          fi
-
-          if [ ! -x "$APKSIGNER" ]; then
-            echo "ERROR: apksigner tidak ditemukan!"
             exit 1
           fi
 
@@ -116,7 +110,7 @@ jobs:
       - name: Upload signed Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusajiDen-v13-Navigasi-Fix
+          name: MusajiDen-Release-APK
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
