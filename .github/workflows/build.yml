@@ -39,11 +39,11 @@ jobs:
 
       - name: Extract Musaji'Den v13 Home Fix
         run: |
-          ZIP_FILE="MusajiDen-Android-Source-v13-Pusat-Masjid.zip"
+          ZIP_FILE="MusajiDen-Android-Source-v13-Home-Fix.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
-            echo "ERROR: ZIP source v13 tidak ditemukan"
-            ls -la
+            echo "ERROR: ZIP source v13 Home Fix tidak ditemukan"
+            ls -lah
             exit 1
           fi
 
@@ -54,12 +54,19 @@ jobs:
 
           if [ ! -f "$PROJECT_DIR/app/build.gradle" ]; then
             echo "ERROR: app/build.gradle tidak ditemukan"
-            find extracted -maxdepth 5 -type f | head -n 100
+            find extracted -maxdepth 6 -type f | head -n 100
             exit 1
           fi
 
-          test -f "$PROJECT_DIR/app/src/main/AndroidManifest.xml"
-          test -f "$PROJECT_DIR/app/src/main/assets/index.html"
+          if [ ! -f "$PROJECT_DIR/app/src/main/AndroidManifest.xml" ]; then
+            echo "ERROR: AndroidManifest.xml tidak ditemukan"
+            exit 1
+          fi
+
+          if [ ! -f "$PROJECT_DIR/app/src/main/assets/index.html" ]; then
+            echo "ERROR: index.html tidak ditemukan"
+            exit 1
+          fi
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
           echo "Source v13 Home Fix berhasil diekstrak"
@@ -68,12 +75,18 @@ jobs:
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          test -n "$ANDROID_KEYSTORE_BASE64"
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "ERROR: ANDROID_KEYSTORE_BASE64 belum tersedia"
+            exit 1
+          fi
 
           echo "$ANDROID_KEYSTORE_BASE64" \
             | base64 --decode > "$PROJECT_DIR/app/release-key.jks"
 
-          test -s "$PROJECT_DIR/app/release-key.jks"
+          if [ ! -s "$PROJECT_DIR/app/release-key.jks" ]; then
+            echo "ERROR: Release keystore gagal disiapkan"
+            exit 1
+          fi
 
           echo "Release keystore berhasil disiapkan"
 
@@ -95,8 +108,10 @@ jobs:
           APK="$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk"
           APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
 
-          test -f "$APK"
-          test -x "$APKSIGNER"
+          if [ ! -f "$APK" ]; then
+            echo "ERROR: APK Release tidak ditemukan"
+            exit 1
+          fi
 
           "$APKSIGNER" verify --verbose --print-certs "$APK"
 
