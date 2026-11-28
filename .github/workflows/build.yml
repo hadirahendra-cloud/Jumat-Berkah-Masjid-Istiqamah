@@ -1,5 +1,5 @@
 
-name: Build Musaji'Den v19 - Donatur Popup
+name: Build Musaji'Den v20 - Pemilihan Donatur di Catat
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - 'MusajiDen-Android-Source-v19-Donatur-Popup-Tanpa-Pemilik.zip'
+      - 'MusajiDen-Android-Source-v20-Pemilihan-Donatur-di-Catat.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -89,15 +89,15 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Extract Musaji'Den v19 source
+      - name: Extract Musaji'Den v20 source
         shell: bash
         run: |
           set -euo pipefail
 
-          ZIP_FILE="MusajiDen-Android-Source-v19-Donatur-Popup-Tanpa-Pemilik.zip"
+          ZIP_FILE="MusajiDen-Android-Source-v20-Pemilihan-Donatur-di-Catat.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
-            echo "::error::ZIP source v19 tidak ditemukan."
+            echo "::error::ZIP source v20 tidak ditemukan."
             find . -maxdepth 2 -type f -name '*.zip'
             exit 1
           fi
@@ -127,7 +127,7 @@ jobs:
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
-          echo "Source v19 berhasil diekstrak."
+          echo "Source v20 berhasil diekstrak."
 
       - name: Verify application identity and version
         shell: bash
@@ -137,11 +137,11 @@ jobs:
           GRADLE_FILE="$PROJECT_DIR/app/build.gradle"
 
           grep -Eq "applicationId[[:space:]]+['\"]com.masjidistiqamah.jumatberkah['\"]" "$GRADLE_FILE"
-          grep -Eq "versionCode[[:space:]]+6" "$GRADLE_FILE"
-          grep -Eq "versionName[[:space:]]+['\"]1.5['\"]" "$GRADLE_FILE"
+          grep -Eq "versionCode[[:space:]]+7" "$GRADLE_FILE"
+          grep -Eq "versionName[[:space:]]+['\"]1.6['\"]" "$GRADLE_FILE"
           grep -Eq "compileSdk[[:space:]]+35" "$GRADLE_FILE"
 
-          echo "Package, version, dan SDK v19 sesuai."
+          echo "Package, version, dan SDK v20 sesuai."
 
       - name: Restore existing release signing key
         shell: bash
@@ -203,12 +203,12 @@ jobs:
 
           "$APKSIGNER" verify --verbose --print-certs "$APK"
 
-          echo "APK v19 berhasil diverifikasi."
+          echo "APK v20 berhasil diverifikasi."
 
       - name: Upload signed release APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusajiDen-v19-Donatur-Popup-Tanpa-Pemilik
+          name: MusajiDen-v20-Pemilihan-Donatur-di-Catat
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
