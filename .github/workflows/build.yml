@@ -11,10 +11,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: JumatBerkahAndroid
-
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -35,27 +31,41 @@ jobs:
         run: |
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-        working-directory: .
 
       - name: Set up Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      - name: Check project files
+      - name: Locate Android project
         run: |
-          test -f app/build.gradle
-          test -f app/src/main/AndroidManifest.xml
-          test -f app/src/main/assets/index.html
-          echo "Project files OK"
+          PROJECT_FILE=$(find . -type f -path '*/app/build.gradle' \
+            -not -path '*/build/*' | head -n 1)
+
+          if [ -z "$PROJECT_FILE" ]; then
+            echo "ERROR: app/build.gradle tidak ditemukan"
+            find . -maxdepth 5 -type f | head -n 100
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$(dirname "$PROJECT_FILE")")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+
+          echo "Project ditemukan: $PROJECT_DIR"
+
+          test -f "$PROJECT_DIR/app/src/main/AndroidManifest.xml"
+          test -f "$PROJECT_DIR/app/src/main/assets/index.html"
 
       - name: Restore private release signing key
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
           test -n "$ANDROID_KEYSTORE_BASE64"
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/release-key.jks
-          test -s app/release-key.jks
+
+          echo "$ANDROID_KEYSTORE_BASE64" \
+            | base64 --decode > "$PROJECT_DIR/app/release-key.jks"
+
+          test -s "$PROJECT_DIR/app/release-key.jks"
           echo "Release keystore OK"
 
       - name: Build signed release APK
@@ -67,11 +77,13 @@ jobs:
           test -n "$ANDROID_KEYSTORE_PASSWORD"
           test -n "$ANDROID_KEY_ALIAS"
           test -n "$ANDROID_KEY_PASSWORD"
+
+          cd "$PROJECT_DIR"
           gradle --no-daemon assembleRelease
 
       - name: Verify APK signature
         run: |
-          APK="app/build/outputs/apk/release/app-release.apk"
+          APK="$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk"
           APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
 
           test -f "$APK"
@@ -85,6 +97,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MusajiDen-v13-Release-APK
-          path: JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
+          path: '**/app/build/outputs/apk/release/app-release.apk'
           if-no-files-found: error
           retention-days: 30
