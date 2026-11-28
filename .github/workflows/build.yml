@@ -1,5 +1,5 @@
 
-name: Build Musaji'Den v17 - Beranda Utama Donasi
+name: Build Musaji'Den v18 - Donatur Keuangan
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - 'MusajiDen-Android-Source-v17-Beranda-Utama-Donasi.zip'
+      - 'MusajiDen-Android-Source-v18-Donatur-Keuangan-Ucapan-Terima-Kasih.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -41,9 +41,9 @@ jobs:
             -type f -name sdkmanager -print -quit)"
 
           if [ -z "$SDKMANAGER" ]; then
-            echo "::error::sdkmanager tidak ditemukan di Android SDK."
-            find "$ANDROID_HOME" -maxdepth 5 -type f \
-              -name sdkmanager -print || true
+            echo "::error::sdkmanager tidak ditemukan."
+            find "$ANDROID_HOME" -maxdepth 5 \
+              -type f -name sdkmanager -print || true
             exit 1
           fi
 
@@ -89,15 +89,15 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Extract Musaji'Den v17 source
+      - name: Extract Musaji'Den v18 source
         shell: bash
         run: |
           set -euo pipefail
 
-          ZIP_FILE="MusajiDen-Android-Source-v17-Beranda-Utama-Donasi.zip"
+          ZIP_FILE="MusajiDen-Android-Source-v18-Donatur-Keuangan-Ucapan-Terima-Kasih.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
-            echo "::error::ZIP source v17 tidak ditemukan."
+            echo "::error::ZIP source v18 tidak ditemukan."
             find . -maxdepth 2 -type f -name '*.zip'
             exit 1
           fi
@@ -127,7 +127,7 @@ jobs:
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
-          echo "Source v17 berhasil diekstrak."
+          echo "Source v18 berhasil diekstrak."
 
       - name: Verify application identity and version
         shell: bash
@@ -137,10 +137,11 @@ jobs:
           GRADLE_FILE="$PROJECT_DIR/app/build.gradle"
 
           grep -Eq "applicationId[[:space:]]+['\"]com.masjidistiqamah.jumatberkah['\"]" "$GRADLE_FILE"
-          grep -Eq "versionCode[[:space:]]+4" "$GRADLE_FILE"
-          grep -Eq "versionName[[:space:]]+['\"]1.3['\"]" "$GRADLE_FILE"
+          grep -Eq "versionCode[[:space:]]+5" "$GRADLE_FILE"
+          grep -Eq "versionName[[:space:]]+['\"]1.4['\"]" "$GRADLE_FILE"
+          grep -Eq "compileSdk[[:space:]]+35" "$GRADLE_FILE"
 
-          echo "Package dan versi v17 sesuai."
+          echo "Package, version, dan SDK v18 sesuai."
 
       - name: Restore existing release signing key
         shell: bash
@@ -188,6 +189,7 @@ jobs:
           set -euo pipefail
 
           APK="$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk"
+
           APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
           AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
 
@@ -201,12 +203,12 @@ jobs:
 
           "$APKSIGNER" verify --verbose --print-certs "$APK"
 
-          echo "APK v17 berhasil diverifikasi."
+          echo "APK v18 berhasil diverifikasi."
 
       - name: Upload signed release APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusajiDen-v17-Beranda-Utama-Donasi
+          name: MusajiDen-v18-Donatur-Keuangan-Ucapan-Terima-Kasih
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
