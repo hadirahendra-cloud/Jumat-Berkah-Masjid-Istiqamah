@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - '**.zip'
+      - 'MusajiDen-Android-Source-v12-Nama-Splash-Fix.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
 
       - name: Extract Android source ZIP
         run: |
-          SOURCE_ZIP="Jumat-Berkah-Android-Source-v10-Kartu-Ucapan-Bergambar.zip"
+          SOURCE_ZIP="MusajiDen-Android-Source-v12-Nama-Splash-Fix.zip"
 
           if [ ! -f "$SOURCE_ZIP" ]; then
             echo "ERROR: Source ZIP tidak ditemukan!"
@@ -56,6 +56,31 @@ jobs:
             echo "ERROR: app/build.gradle tidak ditemukan!"
             exit 1
           fi
+
+      - name: Fix application and splash names
+        working-directory: extracted/JumatBerkahAndroid
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          strings = Path("app/src/main/res/values/strings.xml")
+          content = strings.read_text(encoding="utf-8")
+          content = content.replace(
+              "Musaji'Den",
+              "Musaji\\'Den"
+          )
+          strings.write_text(content, encoding="utf-8")
+
+          html = Path("app/src/main/assets/index.html")
+          content = html.read_text(encoding="utf-8")
+          content = content.replace(
+              "JUMAT BERKAH",
+              "MUSAJI'DEN"
+          )
+          html.write_text(content, encoding="utf-8")
+
+          print("Nama aplikasi dan tulisan splash diperbarui.")
+          PY
 
       - name: Set up Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
@@ -103,18 +128,13 @@ jobs:
             exit 1
           fi
 
-          if [ ! -x "$APKSIGNER" ]; then
-            echo "ERROR: apksigner tidak ditemukan!"
-            exit 1
-          fi
-
           "$APKSIGNER" verify --verbose "$APK"
           ls -lh "$APK"
 
       - name: Upload signed Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusajiDen-Release-APK
+          name: MusajiDen-v12-Release-APK
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
