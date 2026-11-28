@@ -37,9 +37,9 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Extract Musaji'Den v14
+      - name: Extract Musaji'Den v14 Back Buttons Fix
         run: |
-          ZIP_FILE="MusajiDen-Android-Source-v14-Keuangan-Bottom-Nav.zip"
+          ZIP_FILE="MusajiDen-Android-Source-v14-Keuangan-Back-Buttons-Fix.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
             echo "ERROR: ZIP source v14 tidak ditemukan"
@@ -120,7 +120,7 @@ jobs:
       - name: Upload signed release APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusajiDen-v14-Keuangan-Bottom-Nav
+          name: MusajiDen-v14-Keuangan-Back-Buttons-Fix
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
