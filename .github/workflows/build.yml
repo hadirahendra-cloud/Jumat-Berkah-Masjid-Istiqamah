@@ -37,12 +37,12 @@ jobs:
         with:
           gradle-version: '8.7'
 
-      - name: Extract Musaji'Den v13 Home Fix
+      - name: Extract Musaji'Den v13 Home Back Button Fix
         run: |
-          ZIP_FILE="MusajiDen-Android-Source-v13-Home-Fix.zip"
+          ZIP_FILE="MusajiDen-Android-Source-v13-Home-BackButton-Fix.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
-            echo "ERROR: ZIP source v13 Home Fix tidak ditemukan"
+            echo "ERROR: ZIP source Home Back Button Fix tidak ditemukan"
             ls -lah
             exit 1
           fi
@@ -58,18 +58,11 @@ jobs:
             exit 1
           fi
 
-          if [ ! -f "$PROJECT_DIR/app/src/main/AndroidManifest.xml" ]; then
-            echo "ERROR: AndroidManifest.xml tidak ditemukan"
-            exit 1
-          fi
-
-          if [ ! -f "$PROJECT_DIR/app/src/main/assets/index.html" ]; then
-            echo "ERROR: index.html tidak ditemukan"
-            exit 1
-          fi
+          test -f "$PROJECT_DIR/app/src/main/AndroidManifest.xml"
+          test -f "$PROJECT_DIR/app/src/main/assets/index.html"
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
-          echo "Source v13 Home Fix berhasil diekstrak"
+          echo "Source berhasil diekstrak"
 
       - name: Restore private release signing key
         env:
@@ -83,11 +76,7 @@ jobs:
           echo "$ANDROID_KEYSTORE_BASE64" \
             | base64 --decode > "$PROJECT_DIR/app/release-key.jks"
 
-          if [ ! -s "$PROJECT_DIR/app/release-key.jks" ]; then
-            echo "ERROR: Release keystore gagal disiapkan"
-            exit 1
-          fi
-
+          test -s "$PROJECT_DIR/app/release-key.jks"
           echo "Release keystore berhasil disiapkan"
 
       - name: Build signed release APK
@@ -108,10 +97,8 @@ jobs:
           APK="$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk"
           APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
 
-          if [ ! -f "$APK" ]; then
-            echo "ERROR: APK Release tidak ditemukan"
-            exit 1
-          fi
+          test -f "$APK"
+          test -x "$APKSIGNER"
 
           "$APKSIGNER" verify --verbose --print-certs "$APK"
 
@@ -120,7 +107,7 @@ jobs:
       - name: Upload signed release APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusajiDen-v13-Release-APK
+          name: MusajiDen-v13-Home-BackButton-Fix
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
