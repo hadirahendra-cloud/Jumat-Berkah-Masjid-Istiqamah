@@ -1,5 +1,5 @@
 
-name: Build Musaji'Den v24 Pengeluaran Bulanan Riwayat
+name: Build Musaji'Den v24 FIX Tombol
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - 'MusajiDen-Android-Source-v24-Pengeluaran-Bulanan-Riwayat.zip'
+      - 'MusajiDen-Android-Source-v24-FIX-Tombol.zip'
       - '.github/workflows/build.yml'
 
 permissions:
@@ -68,15 +68,15 @@ jobs:
           test -d "$ANDROID_HOME/platforms/android-35"
           test -x "$ANDROID_HOME/build-tools/35.0.0/apksigner"
 
-      - name: Extract Source Musaji'Den v24
+      - name: Extract Source Musaji'Den v24 FIX
         shell: bash
         run: |
           set -euo pipefail
 
-          ZIP_FILE="MusajiDen-Android-Source-v24-Pengeluaran-Bulanan-Riwayat.zip"
+          ZIP_FILE="MusajiDen-Android-Source-v24-FIX-Tombol.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
-            echo "::error::Source ZIP v24 tidak ditemukan."
+            echo "::error::Source ZIP v24 FIX tidak ditemukan."
             exit 1
           fi
 
@@ -90,6 +90,9 @@ jobs:
           test -f "$PROJECT_DIR/app/build.gradle"
           test -f "$PROJECT_DIR/app/src/main/assets/index.html"
           test -f "$PROJECT_DIR/app/src/main/java/com/masjidistiqamah/jumatberkah/MainActivity.java"
+
+          grep -q "versionCode 12" "$PROJECT_DIR/app/build.gradle"
+          grep -q "versionName '1.11'" "$PROJECT_DIR/app/build.gradle"
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
@@ -136,7 +139,7 @@ jobs:
       - name: Upload Signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusajiDen-v24-Pengeluaran-Bulanan-Riwayat
+          name: MusajiDen-v24-FIX-Tombol-Release-APK
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
