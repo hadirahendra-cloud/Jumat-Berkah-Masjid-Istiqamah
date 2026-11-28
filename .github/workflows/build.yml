@@ -1,5 +1,5 @@
 
-name: Build Musaji'Den v15 - Donatur Tetap Bulanan
+name: Build Musaji'Den v16 - Keuangan Full Feature
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - 'MusajiDen-Android-Source-v14-Keuangan-Back-Buttons-Fix-Updated-Donatur-Bulanan.zip'
+      - 'MusajiDen-Android-Source-v16-Keuangan-Full-Feature.zip'
       - '.github/workflows/build.yml'
 
 jobs:
@@ -25,36 +25,72 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK environment
+        shell: bash
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          set -euo pipefail
+
+          if [ -z "${ANDROID_HOME:-}" ]; then
+            echo "::error::ANDROID_HOME tidak ditemukan."
+            exit 1
+          fi
+
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" \
+            -type f -name sdkmanager -print -quit)"
+
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::sdkmanager tidak ditemukan."
+            exit 1
+          fi
+
+          echo "SDKMANAGER=$SDKMANAGER" >> "$GITHUB_ENV"
 
       - name: Install Android SDK packages
+        shell: bash
         run: |
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          set -euo pipefail
+
+          set +o pipefail
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_HOME" --licenses || true
+          set -o pipefail
+
+          "$SDKMANAGER" --sdk_root="$ANDROID_HOME" \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
+
+      - name: Verify Android SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -d "$ANDROID_HOME/platforms/android-35"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/apksigner"
+
+          echo "Android SDK 35 siap."
 
       - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      - name: Extract Musaji'Den v15 Donatur Bulanan
+      - name: Extract Musaji'Den v16 source
         shell: bash
         run: |
           set -euo pipefail
 
-          ZIP_FILE="MusajiDen-Android-Source-v14-Keuangan-Back-Buttons-Fix-Updated-Donatur-Bulanan.zip"
+          ZIP_FILE="MusajiDen-Android-Source-v16-Keuangan-Full-Feature.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
-            echo "::error::ZIP source v15 tidak ditemukan."
-            ls -lah
+            echo "::error::Source ZIP v16 tidak ditemukan."
+            echo "Daftar ZIP di repository:"
+            find . -maxdepth 2 -type f -name '*.zip'
             exit 1
           fi
 
-          unzip -t "$ZIP_FILE"
+          unzip -t "$ZIP_FILE" >/dev/null
 
           mkdir -p extracted
           unzip -q "$ZIP_FILE" -d extracted
@@ -63,7 +99,7 @@ jobs:
 
           if [ ! -f "$PROJECT_DIR/app/build.gradle" ]; then
             echo "::error::app/build.gradle tidak ditemukan."
-            find extracted -maxdepth 6 -type f | head -100
+            find extracted -maxdepth 5 -type f | head -100
             exit 1
           fi
 
@@ -79,7 +115,7 @@ jobs:
 
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
 
-          echo "Source v15 berhasil diekstrak."
+          echo "Source v16 berhasil diekstrak."
 
       - name: Verify application identity and version
         shell: bash
@@ -89,12 +125,14 @@ jobs:
           GRADLE_FILE="$PROJECT_DIR/app/build.gradle"
 
           grep -Fq "applicationId 'com.masjidistiqamah.jumatberkah'" "$GRADLE_FILE"
-          grep -Fq "versionCode 2" "$GRADLE_FILE"
-          grep -Fq "versionName '1.1'" "$GRADLE_FILE"
+          grep -Fq "versionCode 3" "$GRADLE_FILE"
+          grep -Fq "versionName '1.2'" "$GRADLE_FILE"
+          grep -Fq "compileSdk 35" "$GRADLE_FILE"
 
-          echo "Package dan versi aplikasi sesuai."
+          echo "Identitas aplikasi dan versi v16 sesuai."
 
       - name: Restore existing release signing key
+        shell: bash
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
@@ -106,7 +144,8 @@ jobs:
           fi
 
           echo "$ANDROID_KEYSTORE_BASE64" \
-            | base64 --decode > "$PROJECT_DIR/app/release-key.jks"
+            | base64 --decode \
+            > "$PROJECT_DIR/app/release-key.jks"
 
           if [ ! -s "$PROJECT_DIR/app/release-key.jks" ]; then
             echo "::error::Keystore gagal disiapkan."
@@ -116,6 +155,7 @@ jobs:
           echo "Signing key lama berhasil disiapkan."
 
       - name: Build signed release APK
+        shell: bash
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
@@ -137,6 +177,7 @@ jobs:
           set -euo pipefail
 
           APK="$PROJECT_DIR/app/build/outputs/apk/release/app-release.apk"
+
           APKSIGNER="$ANDROID_HOME/build-tools/35.0.0/apksigner"
           AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
 
@@ -150,12 +191,12 @@ jobs:
 
           "$APKSIGNER" verify --verbose --print-certs "$APK"
 
-          echo "APK v15 berhasil diverifikasi."
+          echo "APK v16 berhasil diverifikasi."
 
       - name: Upload signed release APK
         uses: actions/upload-artifact@v4
         with:
-          name: MusajiDen-v15-Donatur-Tetap-Bulanan
+          name: MusajiDen-v16-Keuangan-Full-Feature
           path: extracted/JumatBerkahAndroid/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
